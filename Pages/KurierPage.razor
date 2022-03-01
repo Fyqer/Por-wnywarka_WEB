@@ -1,0 +1,318 @@
+﻿@page "/kurier"
+@using DataLibrary
+@using ProjektSklepp.Data
+@using Microsoft.Extensions.Configuration
+@inject MudBlazor.ISnackbar snackbar
+@inject IDataAccess _data
+@inject IConfiguration _config
+@using Microsoft.AspNetCore.Authorization;
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+@using Microsoft.AspNetCore.Identity;
+@inject UserManager<IdentityUser> _UserManager
+@inject RoleManager<IdentityRole> _RoleManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+@attribute [Authorize(Roles = "Kurier")]
+<AuthorizeView>
+
+
+    <h1 align=" center">Courier Page </h1>
+
+
+    <div class="mud1">
+
+
+        <MudCard Elevation="10">
+            <MudGrid Class="mx-auto pa-6 mud-theme-success" Style="border-radius:15px">
+
+
+                <MudItem>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+
+                            <MudText Typo="Typo.h6">Provide city:</MudText>
+
+                        </CardHeaderContent>
+
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudTextField @bind-Value="City" Label="City" Variant="Variant.Text" Margin="Margin.Normal" AdornmentIcon="@Icons.Material.Filled.AttachMoney" AdornmentColor="Color.Success"> </MudTextField>
+
+                        <br />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchByCity">  Search </MudButton>
+                    </MudCardContent>
+                </MudItem>
+            </MudGrid>
+        </MudCard>
+
+    </div>
+    <br />
+    <div class="mud1">
+        <MudCard Elevation="10">
+            <MudGrid Class="mx-auto pa-6 ">
+
+
+                <MudItem>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+
+
+                            <MudText Typo="Typo.h6">Asign a order to you / Edit status </MudText>
+
+                        </CardHeaderContent>
+
+                    </MudCardHeader>
+
+                    <MudCardContent>
+
+
+                        <MudTextField Label="Courier email" Variant="Variant.Text" Disabled="true" @bind-Value="Zamowienie.Kurier" Text="@context.User.Identity.Name" AdornmentIcon="@Icons.Material.Filled.AttachMoney" AdornmentColor="Color.Success"> </MudTextField>
+                        <MudTextField @bind-Value="Zamowienie.Status" Label="Status" Variant="Variant.Text" Margin="Margin.Normal" AdornmentIcon="@Icons.Material.Filled.AttachMoney" AdornmentColor="Color.Success"> </MudTextField>
+                        <br />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="InsertData">  Apply changes </MudButton>
+                    </MudCardContent>
+
+                </MudItem>
+            </MudGrid>
+        </MudCard>
+    </div>
+    <br />
+
+
+
+
+
+
+
+    <MudTable Elevation="10" Items="Zamowienia" Filter="new Func<ZamowienieModel, bool>(Search)" @bind-zamowienie="Zamowienia">
+
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Free orders</MudText>
+            <MudToolBarSpacer />
+            <MudTextField @bind-Value="searchstring" Placeholder="Search for orders..."
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium" Class="mt-0"> </MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh> ID</MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Nazwisko_klienta)" InitialDirection="SortDirection.Ascending">Surname</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Adres_dostawy)">Adres dostawy</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Koszt_zamowienia)">Price</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Sklep)">Store</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Zakupione_produkty)">Products</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Status)">Status</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Data)">Date</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Kurier)">Courier</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+
+        <RowTemplate Context="ZamowienieModel context">
+            <MudTd DataLabel="iD">@context.ID</MudTd>
+            <MudTd DataLabel="Surname">@context.Nazwisko_klienta</MudTd>
+            <MudTd DataLabel="cleint id">@context.Adres_dostawy</MudTd>
+            <MudTd DataLabel="Price">@context.Koszt_zamowienia</MudTd>
+            <MudTd DataLabel="Store">@context.Sklep</MudTd>
+            <MudTd DataLabel="Products">@context.Zakupione_produkty</MudTd>
+
+            <MudTd DataLabel="Status">@context.Status</MudTd>
+
+            <MudTd DataLabel="Dates">@context.Data</MudTd>
+
+            <MudTd DataLabel="Courier">@context.Kurier</MudTd>
+
+            <MudTd DataLabel="">
+                <MudFab @onclick="@(()=> UpdateData(context.ID))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" />
+
+
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100 }" />
+        </PagerContent>
+    </MudTable>
+
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+
+
+
+    <MudTable Elevation="10" Items="Zamowieniaa" Filter="new Func<ZamowienieModel, bool>(Search)" @bind-zamowienie="Zamowieniaa">
+
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Orders asigned to you:</MudText>
+            <MudToolBarSpacer />
+            <MudTextField @bind-Value="searchstring" Placeholder="Search for orders..."
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium" Class="mt-0"> </MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh> ID</MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Nazwisko_klienta)" InitialDirection="SortDirection.Ascending">Surname</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Adres_dostawy)">Adres dostawy</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Koszt_zamowienia)">Price</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Sklep)">Store</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Zakupione_produkty)">Products</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Status)">Status</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Data)">Date</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ZamowienieModel, object>(x=> x.Kurier)">Courier</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+
+        <RowTemplate Context="ZamowienieModel context">
+            <MudTd DataLabel="iD">@context.ID</MudTd>
+            <MudTd DataLabel="Surname">@context.Nazwisko_klienta</MudTd>
+            <MudTd DataLabel="cleint id">@context.Adres_dostawy</MudTd>
+            <MudTd DataLabel="Price">@context.Koszt_zamowienia</MudTd>
+            <MudTd DataLabel="Store">@context.Sklep</MudTd>
+            <MudTd DataLabel="Products">@context.Zakupione_produkty</MudTd>
+
+            <MudTd DataLabel="Status">@context.Status</MudTd>
+
+            <MudTd DataLabel="Dates">@context.Data</MudTd>
+
+            <MudTd DataLabel="Courier">@context.Kurier</MudTd>
+
+            <MudTd DataLabel="">
+                <MudFab @onclick="@(()=> UpdateData(context.ID))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" />
+
+
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100 }" />
+        </PagerContent>
+    </MudTable>
+
+
+
+
+
+
+</AuthorizeView>
+
+
+
+@code {
+
+
+
+    public string City = "";
+    public int flagaEdit = 0;
+    public int idd = 0;
+
+    List<ZamowienieModel> Zamowienia;
+    List<ZamowienieModel> Zamowieniaa;
+    private ZamowienieModel Zamowienie = new ZamowienieModel();
+
+    string searchstring = "";
+    private bool Search(ZamowienieModel Zamowienie)
+    {
+
+        if (Zamowienie.Miasto != null && Zamowienie.Koszt_zamowienia != 0 && Zamowienie.Sklep != null &&
+        (Zamowienie.Adres_dostawy.Contains(searchstring, StringComparison.OrdinalIgnoreCase)))
+
+        {
+            return true;
+        }
+        return false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        var name = user.Identity.Name;
+
+        try
+        {
+
+            string sqll = "SELECT * FROM zamowienie where Kurier = @a ";
+            Zamowieniaa = await _data.LoadData<ZamowienieModel, dynamic>(sqll, new { a = name }, _config.GetConnectionString("Mysql"));
+
+            string sql = "SELECT * FROM zamowienie where Miasto = @a AND  Status != 'Zakończone' ";
+            Zamowienia = await _data.LoadData<ZamowienieModel, dynamic>(sql, new { a = City }, _config.GetConnectionString("Mysql"));
+
+;
+        }
+
+        catch(System.ArgumentNullException)
+        {
+
+
+        }
+
+
+    }
+
+
+
+    private async Task InsertData()
+    {
+        if (flagaEdit == 1 && idd != 0)
+        {
+            var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+            var user = authstate.User;
+            var name = user.Identity.Name;
+            string sql = "update zamowienie set Status = @b ,  Kurier = @a WHERE  ID = @c";
+            await _data.SaveData(sql, new { b = Zamowienie.Status, a = name, c = idd }, _config.GetConnectionString("Mysql"));
+            await OnInitializedAsync();
+            snackbar.Add("Success, item has been updated!", Severity.Success);
+        }
+        else
+        {
+            snackbar.Add("Error, choose any  element first!", Severity.Error);
+        }
+        flagaEdit = 0;
+        idd = 0;
+    }
+
+
+
+
+    private async Task SearchByCity()
+    {
+        if (City != null)
+        {
+            string sql = "SELECT * FROM zamowienie WHERE Miasto = @a";
+            Zamowienia = await _data.LoadData<ZamowienieModel, dynamic>(sql, new { a = City }, _config.GetConnectionString("Mysql"));
+            if (Zamowienia.Count == 0)
+            {
+
+                snackbar.Add("No orders currently!", Severity.Error);
+            }
+        }
+        else
+            snackbar.Add("Provide a City!", Severity.Error);
+    }
+
+
+
+
+    private async Task UpdateData(int id)
+    {
+        idd = id;
+        flagaEdit = 1;
+       Zamowienie = Zamowienia.FirstOrDefault(c => c.ID == id);
+    }
+
+
+
+    private async Task DeleteData(int id)
+    {
+
+        string sql = "delete from Zamowienie where ID = @a";
+        await _data.SaveData(sql, new { a = id }, _config.GetConnectionString("Mysql"));
+        snackbar.Add(" Zamowienie zostal usuniety", Severity.Success);
+        await OnInitializedAsync();
+    }
+
+
+
+}
+
+
+

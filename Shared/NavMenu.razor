@@ -1,0 +1,68 @@
+﻿<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href="">ProjektSklepp</a>
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <ul class="nav flex-column">
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home page
+            </NavLink>
+        </li>
+
+        @* <li class="nav-item px-3">
+            <NavLink class="nav-link" href="produkt">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Przeglądaj Produkty
+            </NavLink>
+        </li>
+        *@
+        <AuthorizeView Roles="Admin">
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="admin">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> Manage Users
+                </NavLink>
+            </li>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Magazynier">
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="produkt">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> Edit items
+                </NavLink>
+            </li>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Kurier">
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="kurier">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> Mangage orders
+                </NavLink>
+            </li>
+        </AuthorizeView>
+
+        <AuthorizeView>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="porownaj">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> Comapre prices
+                </NavLink>
+            </li>
+        </AuthorizeView>
+
+
+
+    </ul>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}
