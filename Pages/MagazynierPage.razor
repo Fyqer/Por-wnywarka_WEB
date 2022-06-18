@@ -1,0 +1,271 @@
+﻿@page "/produkt"
+@using DataLibrary
+@using ProjektSklepp.Data
+@using Microsoft.Extensions.Configuration
+@inject MudBlazor.ISnackbar snackbar
+@inject IDataAccess _data
+@inject IConfiguration _config
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Identity;
+@inject UserManager<IdentityUser> _UserManager
+@inject RoleManager<IdentityRole> _RoleManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using System.Threading;
+<AuthorizeView>
+
+
+    <h1 align=" center"> Hello, @context.User.Identity.Name!</h1>
+    <div class="container">
+        <div class="mud1">
+
+
+
+
+            <MudCard Elevation="10" >
+                <MudGrid Class="mx-auto pa-6 px-6 mx-4  mud-theme-success px-6 mx-4 rounded">
+
+
+                    <MudItem>
+                        <MudCardHeader>
+                            <CardHeaderContent>
+
+                                <MudText Typo="Typo.h6"> Store code:</MudText>
+
+                            </CardHeaderContent>
+
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudTextField  Style="font-weight:bold" @bind-Value="StoreCode" Label="StoreCode" Variant="Variant.Text" Margin="Margin.Normal" AdornmentIcon="@Icons.Material.Filled.AttachMoney" AdornmentColor="Color.Success"> </MudTextField>
+
+                            <br />
+                            <MudButton Style="font-weight:bold"  Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchStore">  Search </MudButton>
+                        </MudCardContent>
+                    </MudItem>
+                </MudGrid>
+            </MudCard>
+
+        </div>
+
+        <br />
+        <br />  
+        <br />
+        <div class="mud1">
+            <MudCard Elevation="10" Style="font-weight:bold">
+                <MudGrid Class="mx-auto pa-6 px-6 mx-4 rounded">
+
+
+                    <MudItem>
+                        <MudCardHeader>
+                            <CardHeaderContent>
+
+
+                                <MudText Typo="Typo.h6">Add/ Edit Item </MudText>
+
+                            </CardHeaderContent>
+                                        
+                        </MudCardHeader>
+                        <MudCardContent Style="font-weight:bold">
+                            <MudTextField @bind-Value="produktt.cena_produktu" Label="Cena" Variant="Variant.Text" Margin="Margin.Normal" AdornmentIcon="@Icons.Material.Filled.AttachMoney" AdornmentColor="Color.Success"> </MudTextField>
+                            <MudTextField @bind-Value="produktt.Ilosc" Label="Ilosc" Variant="Variant.Text" Margin="Margin.Normal" AdornmentText="Kg"></MudTextField>
+                            <MudTextField @bind-Value="produktt.sklepID" Label="Kod Sklepu" Variant="Variant.Text" Margin="Margin.Normal" AdornmentIcon="@Icons.Filled.Search"></MudTextField>
+                            <MudTextField @bind-Value="produktt.nazwa_produktu" Label="Nazwa" Variant="Variant.Text" Margin="Margin.Normal" AdornmentIcon="@Icons.Filled.Search"></MudTextField>
+                            <MudTextField @bind-Value="produktt.firma_produktu" Label="producent" Variant="Variant.Text" Margin="Margin.Normal"></MudTextField>
+                            <MudTextField @bind-Value="produktt.Miasto" Label="Miasto" Variant="Variant.Text" Margin="Margin.Normal"></MudTextField>
+                            <br />
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="InsertData">  Zapisz Produkt </MudButton>
+                        </MudCardContent>
+                    </MudItem>
+                </MudGrid>
+            </MudCard>
+
+        </div>
+    </div>
+    <br />
+    <br />
+    <br />
+
+
+</AuthorizeView>
+    <MudTable Elevation="10" Items="produkt" Filter="new Func<ProduktModel, bool>(Search)" @bind-produkt="produkt">
+
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Produkty</MudText>
+            <MudToolBarSpacer />
+            <MudTextField @bind-Value="searchstring" Placeholder="Przeszukaj Produkty..."
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium" Class="mt-0"> </MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ProduktModel, object>(x=> x.ID)">ID</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ProduktModel, object>(x=> x.nazwa_produktu)" InitialDirection="SortDirection.Ascending">Nazwa</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ProduktModel, object>(x=> x.Ilosc)">Ilosc</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ProduktModel, object>(x=> x.cena_produktu)">Cena</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ProduktModel, object>(x=> x.sklepID)">SklepID</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh> <MudBlazor.MudTableSortLabel SortBy=" new Func<ProduktModel, object>(x=> x.Miasto)">Miejscowosc</MudBlazor.MudTableSortLabel> </MudTh>
+            <MudTh>Akcje</MudTh>
+        </HeaderContent>
+
+
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.ID</MudTd>
+
+            <MudTd DataLabel="Nazwa">@context.nazwa_produktu</MudTd>
+            <MudTd DataLabel="Ilosc">@context.Ilosc</MudTd>
+            <MudTd DataLabel="Cena">@context.cena_produktu</MudTd>
+            <MudTd DataLabel="SklepID">@context.sklepID</MudTd>
+            <MudTd DataLabel="Miasto">@context.Miasto</MudTd>
+            <MudTd DataLabel="">
+                <MudFab @onclick="@(()=> UpdateData(context.ID))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" />
+
+                <MudFab @onclick="@(()=> DeleteData(context.ID))" Color="Color.Primary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small" />
+
+
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100 }" />
+        </PagerContent>
+
+    </MudTable>
+
+
+
+@code {
+    public string StoreCode = "";
+    public int flagaEdit = 0;
+    public int idd = 0;
+
+    List<ProduktModel> produkt;
+    private ProduktModel produktt = new ProduktModel();
+
+    List<SklepModel> sklep;
+
+    string searchstring = "";
+    private bool Search(ProduktModel produktt)
+    {
+
+        if (produktt.nazwa_produktu != null && produktt.cena_produktu != 0 && produktt.Ilosc != 0 && produktt.sklepID != 0 &&
+        (produktt.nazwa_produktu.Contains(searchstring, StringComparison.OrdinalIgnoreCase)))
+
+        {
+            return true;
+        }
+        return false;
+    }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (StoreCode != null)
+        {
+            string sql = "SELECT * from sklep where Kod_sklepu = @a";
+
+
+            sklep = await _data.LoadData<SklepModel, dynamic>(sql, new { a = StoreCode }, _config.GetConnectionString("Mysql"));
+            int sklepID = sklep.Select(x => x.Id).FirstOrDefault();
+
+            //pobieranie produktow 
+            string sqll = "SELECT *FROM produkt where sklepID = @a";
+            produkt = await _data.LoadData<ProduktModel, dynamic>(sqll, new { a = sklepID }, _config.GetConnectionString("Mysql"));
+
+        }
+        else
+
+            snackbar.Add("Store code is incorrect!", Severity.Success);
+    }
+
+
+
+
+    private async Task SearchStore()
+    {
+        try
+        {
+            if (StoreCode != null && StoreCode.Length != 0)
+            {
+                //pobieranie sklep ID z tabeli sklep
+                string sql = "SELECT * from sklep where Kod_sklepu = @a";
+
+                sklep = await _data.LoadData<SklepModel, dynamic>(sql, new { a = StoreCode }, _config.GetConnectionString("Mysql"));
+                int sklepID = sklep.Select(x => x.Id).FirstOrDefault();
+
+                //pobieranie produktow 
+                string sqll = "SELECT *FROM produkt where sklepID = @a";
+                produkt = await _data.LoadData<ProduktModel, dynamic>(sqll, new { a = sklepID }, _config.GetConnectionString("Mysql"));
+
+                if (produkt.Count == 0)
+                {
+
+                    snackbar.Add("No product found!", Severity.Error);
+                }
+            }
+            else
+                snackbar.Add("Store code is incorrect!", Severity.Error);
+        }
+        catch (MySql.Data.MySqlClient.MySqlException)
+        {
+            snackbar.Add("Sql Error!", Severity.Error);
+        }
+    }
+
+
+
+
+    private async Task InsertData()
+    {
+        if (produktt.Ilosc >= 1 && produktt.cena_produktu > 0)
+        {
+            if (flagaEdit == 0)
+            {
+                string sql = " INSERT INTO produkt( cena_produktu, nazwa_produktu, sklepID, firma_produktu, Ilosc, Miasto) VALUES (@a, @b,@c,@d,@e,@f);";
+                await _data.SaveData(sql, new { a = produktt.cena_produktu, b = produktt.nazwa_produktu, c = produktt.sklepID,
+                    d = produktt.firma_produktu, e = produktt.Ilosc, f = produktt.Miasto }, _config.GetConnectionString("Mysql"));
+                await OnInitializedAsync();
+            }
+            if (flagaEdit == 1 && idd != 0)
+            {
+                string sql = "update produkt set cena_produktu = @a, nazwa_produktu = @b, sklepID = @c, firma_produktu = @d, Ilosc = @e, Miasto = @f" +
+                        " where ID = @g;";
+                await _data.SaveData(sql, new { a = produktt.cena_produktu, b = produktt.nazwa_produktu, c = produktt.sklepID,
+                    d = produktt.firma_produktu, e = produktt.Ilosc, f = produktt.Miasto, g = idd }, _config.GetConnectionString("Mysql"));
+                await OnInitializedAsync();
+                snackbar.Add(" Produkt zostal zapisany", Severity.Success);
+            }
+        }
+        else
+        {
+            snackbar.Add(" Wartosc  Ilosc lub cena  za mala", Severity.Success);
+
+        }
+        flagaEdit = 0;
+        idd = 0;
+        await OnInitializedAsync();
+    }
+
+
+
+
+    private async Task UpdateData(int id)
+    {
+        idd = id;
+        flagaEdit = 1;
+        produktt = produkt.FirstOrDefault(c => c.ID == id);
+        await SearchStore();
+    }
+
+
+    private async Task DeleteData(int id)
+    {
+        string sql = "delete from produkt where ID = @a";
+        await _data.SaveData(sql, new { a = id }, _config.GetConnectionString("Mysql"));
+        snackbar.Add(" Product has been deleted", Severity.Success);
+        await SearchStore();
+    }
+
+
+
+}
+
+
+

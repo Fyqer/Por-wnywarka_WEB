@@ -1,0 +1,375 @@
+﻿@page "/porownaj"
+@using DataLibrary
+@using ProjektSklepp.Data
+@using Microsoft.Extensions.Configuration
+@inject MudBlazor.ISnackbar snackbar
+@inject IDataAccess _data
+@inject IConfiguration _config
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Identity;
+@inject UserManager<IdentityUser> _UserManager
+@inject RoleManager<IdentityRole> _RoleManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+<link href="https://use.fontawesome.com/releases/v5.14.0/css/all.css" rel="stylesheet">
+<h1 align="center"> Porównywarka cen</h1>
+
+
+<h2 align="center">   Average price for all  Biedronka stores: @AvgB  zł</h2>
+<h2 align="center">   Average price for all Netto stores: @AvgT  zł</h2>
+<h2 align="center">   Average price for all Lidl stores: @AvgL  zł</h2>
+
+
+
+<div class="mud1">
+    <MudCard Elevation="10">
+        <MudGrid>
+
+
+            <MudItem Class="d-flex justify-center py-2 px-1 mt-6">
+
+
+                <MudCardHeader>
+
+
+                    <CardHeaderContent>
+
+
+
+                        <MudText Typo="Typo.h6">Search your product</MudText>
+                    </CardHeaderContent>
+
+                </MudCardHeader>
+                <MudCardContent>
+
+                    <MudTextField @bind-Value="nazwa" Label="Product name" Variant="Variant.Text" Margin="Margin.Normal"></MudTextField>
+                    <MudTextField @bind-Value="Miasto" Label="City" Variant="Variant.Text" Margin="Margin.Normal"></MudTextField>
+                    <MudTextField @bind-Value="Producent" Label="Producer" Variant="Variant.Text" Margin="Margin.Normal"></MudTextField>
+                    <br />
+                    <MudButton Variant="Variant.Filled" OnClick="UpdateData" Color="Color.Primary">  Zobacz Ceny </MudButton>
+                </MudCardContent>
+            </MudItem>
+        </MudGrid>
+    </MudCard>
+    <br />
+</div>
+
+<MudPaper Class="d-flex justify-center py-2 px-1 mt-6">
+    <MudPaper Class="d-flex pa-4">
+        <img class="jpg" src="/images/biedr.jpg" asp-append-version="true" />
+    </MudPaper>
+
+    <MudPaper Class="d-flex pa-4">
+        <img class="jpg" src="/images/tesco.jpg" asp-append-version="true" width="260px" height="200px" />
+    </MudPaper>
+
+    <MudPaper Class="d-flex pa-4">
+        <img class="jpg" src="/images/lidl.jpg" asp-append-version="true" width="260px" height="200px" />
+    </MudPaper>
+</MudPaper>
+
+
+<MudPaper Class="d-flex justify-center py-2 px-1 mt-6">
+    <MudTextField @bind-Value="produktB.cena_produktu" Label="Biedornka price" Variant="Variant.Text" Style="font-size:27px; color:black;" Disabled="true" Margin="Margin.Normal" AdornmentText="Kg">
+    </MudTextField>
+    <MudTextField @bind-Value="produktT.cena_produktu" Label="Netto Price" Variant="Variant.Text" Style="font-size:27px; color:black;" Margin="Margin.Normal" Disabled="true" AdornmentText="Kg">
+    </MudTextField>
+    <MudTextField @bind-Value="produktL.cena_produktu" Label="Lidl Price" Variant="Variant.Text" Style="font-size:27px; color:black;" Margin="Margin.Normal" Disabled="true" AdornmentText="Kg">
+    </MudTextField>
+</MudPaper>
+
+<p1>Prices of shopping cart of compared items: </p1>
+<MudPaper Class="d-flex justify-center py-2 px-1 mt-6">
+    <MudTextField @bind-Value="koszykB" Label="Biedronka" Variant="Variant.Text" Margin="Margin.Normal" Style="font-size:27px; color :black;" Disabled="true" AdornmentText="Kg"></MudTextField>
+    <MudTextField @bind-Value="koszykT" Label="Netto" Variant="Variant.Text" Margin="Margin.Normal" Style="font-size:27px; color:black;" Disabled="true" AdornmentText="Kg"></MudTextField>
+    <MudTextField @bind-Value="koszykL" Label="Lidl" Variant="Variant.Text" Margin="Margin.Normal" Style="font-size:27px; color:black;" Disabled="true" AdornmentText="Kg"></MudTextField>
+</MudPaper>
+
+<br />
+<div class="Komunikat">
+
+<h1>@KomunikatBonusaNaKoniec</h1>
+</div>
+
+<div class="bigbutton">
+</div>
+
+
+
+
+@code {
+
+    List<ProduktModel> produkty;
+    public string Miasto = null;
+    public string nazwa = null;
+    public string Producent = null;
+
+
+    List<ProduktModel> produktyT;
+    List<ProduktModel> produktyB;
+    List<ProduktModel> produktyL;
+
+    public ProduktModel produktT = new ProduktModel();
+    public ProduktModel produktB = new ProduktModel();
+    public ProduktModel produktL = new ProduktModel();
+
+
+    string searchstring = "";
+
+
+    public double thebest;
+
+    public double roztb;
+    public double roztl;
+
+
+    public double rozbl;
+    public double rozbt;
+
+    public double rozlb;
+    public double rozlt;
+
+    public dynamic AvgB;
+    public dynamic AvgT;
+    public dynamic AvgL;
+
+    public string KomunikatBonusaNaKoniec = "";
+
+
+    public double koszykT = 0;
+    public double koszykB = 0;
+    public double koszykL = 0;
+
+    public string T = "Tesco";
+    public  string B = "Biedronka";
+    public string L = "Lidl";
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        string avgSqlB = "SELECT AVG(cena_produktu) from  biedronka_produkty";
+
+
+        var z = await _data.LoadData2<double, dynamic>
+               (avgSqlB, new { a = B }, _config.GetConnectionString("Mysql"));
+        AvgB = z.ToString("0.00");
+
+
+
+
+        string avgSqlT = "SELECT AVG(cena_produktu) from  tesco_produkty";
+
+        var x = await _data.LoadData2<double, dynamic>
+            (avgSqlT, new { a = T }, _config.GetConnectionString("Mysql"));
+        AvgT = x.ToString("0.00");
+
+
+
+        string avgSqlL = "SELECT AVG(cena_produktu) from  lidl_produkty";
+
+
+        var y = await _data.LoadData2<double, dynamic>
+           (avgSqlL, new { a = L }, _config.GetConnectionString("Mysql"));
+        AvgL = y.ToString("0.00");
+
+
+    }
+
+
+    private async Task UpdateData()
+    {
+
+        if (Producent != null && nazwa != null && Miasto != null)
+        {
+
+            string idTT = "SELECT * from  sklep INNER JOIN produkt on produkt.sklepID " +
+                    "= sklep.ID WHERE sklep.nazwa_sklepu = @a AND produkt.nazwa_produktu = @b AND produkt.Miasto" +
+                    " = @c AND produkt.firma_produktu = @d";
+
+            string idBB = "SELECT * from  sklep INNER JOIN produkt on produkt.sklepID " +
+                "= sklep.ID WHERE sklep.nazwa_sklepu = @a AND produkt.nazwa_produktu = @b AND produkt.Miasto" +
+                " = @c AND produkt.firma_produktu = @d";
+
+            string idLL = "SELECT * from  sklep INNER JOIN produkt on produkt.sklepID " +
+                "= sklep.ID WHERE sklep.nazwa_sklepu = @a AND produkt.nazwa_produktu = @b AND produkt.Miasto" +
+                " = @c AND produkt.firma_produktu = @d";
+
+
+
+            try
+            {
+                produktyT = await _data.LoadData<ProduktModel, dynamic>
+                 (idTT, new { a = T, b = nazwa, c = Miasto, d = Producent }, _config.GetConnectionString("Mysql"));
+
+
+                produktyB = await _data.LoadData<ProduktModel, dynamic>
+                     (idBB, new { a = B, b = nazwa, c = Miasto, d = Producent }, _config.GetConnectionString("Mysql"));
+
+                produktyL = await _data.LoadData<ProduktModel, dynamic>
+                    (idLL, new { a = L, b = nazwa, c = Miasto, d = Producent }, _config.GetConnectionString("Mysql"));
+
+                if (produktyT.Count == 0 || produktyB.Count == 0 || produktyL.Count == 0)
+                {
+                    snackbar.Add("Sorry, we do not have this product in database!", Severity.Error);
+                    Miasto = null;
+                    nazwa = null;
+                    Producent = null;
+                }
+
+
+                else
+                {
+
+
+
+
+
+                    produktT = produktyT.FirstOrDefault(c => c.Miasto == Miasto && c.nazwa_produktu == nazwa && c.firma_produktu == Producent);
+
+                    produktB = produktyB.FirstOrDefault(c => c.Miasto == Miasto && c.nazwa_produktu == nazwa && c.firma_produktu == Producent);
+
+                    produktL = produktyL.FirstOrDefault(c => c.Miasto == Miasto && c.nazwa_produktu == nazwa && c.firma_produktu == Producent);
+                    koszykB += produktB.cena_produktu;
+                    koszykL += produktL.cena_produktu;
+                    koszykT += produktT.cena_produktu;
+
+                    //tesco win
+
+                    if (produktT.cena_produktu < produktB.cena_produktu && produktT.cena_produktu < produktL.cena_produktu)
+                    {
+                        thebest = produktT.cena_produktu;
+                        roztl = produktL.cena_produktu - thebest;
+                        roztb = produktB.cena_produktu - thebest;
+                        KomunikatBonusaNaKoniec = "The cheapest product is from netto:" + produktT.cena_produktu + "zł, compared to offer from " +
+                                "lidl, item from netto is " +
+                            roztl.ToString("0.00") + "zł cheaper" + " and " + roztb.ToString("0.00") + "zł cheaper from biedronka";
+
+
+
+
+
+
+
+                    }
+
+
+                    //biedronka win
+                    if (produktB.cena_produktu < produktT.cena_produktu && produktB.cena_produktu < produktL.cena_produktu)
+                    {
+                        thebest = produktB.cena_produktu;
+                        rozbl = produktL.cena_produktu - thebest;
+                        rozbt = produktT.cena_produktu - thebest;
+                        KomunikatBonusaNaKoniec = "The cheapest product is from biedronka:" + thebest + "zł, compared to offer from lidl, item from biedronka is " +
+                            rozbl.ToString("0.00") + "zł cheaper" + " and " + rozbt.ToString("0.00") + "zł cheaper from netto";
+
+
+
+
+
+
+
+                    }
+
+                    //lidl win
+                    if (produktL.cena_produktu < produktT.cena_produktu && produktL.cena_produktu < produktB.cena_produktu)
+                    {
+                        thebest = produktL.cena_produktu;
+                        rozlb = produktB.cena_produktu - thebest;
+                        rozlt = produktT.cena_produktu - thebest;
+                        KomunikatBonusaNaKoniec = "The cheapest product is from lidl:" + thebest + "zł, compared to offer from biedornka, item from lidl is " +
+                            rozlb.ToString("0.00") + "zł cheaper" + " and " + rozlt.ToString("0.00") + "zł cheaper from netto";
+
+
+                    }
+
+
+                    //everyhting win
+                    if (produktL.cena_produktu == produktT.cena_produktu && produktT.cena_produktu == produktB.cena_produktu)
+                    {
+                        thebest = produktL.cena_produktu;
+                        KomunikatBonusaNaKoniec = "Prices are the same:" + thebest + "zł";
+
+
+
+
+
+
+
+                    }
+
+                    // lidl netto win
+                    if (produktL.cena_produktu == produktT.cena_produktu && produktL.cena_produktu < produktB.cena_produktu)
+                    {
+                        thebest = produktL.cena_produktu;
+                        rozlb = produktB.cena_produktu - thebest;
+                        KomunikatBonusaNaKoniec = "Prices from lidl and netto are the best:" + thebest + ", comapred to price from biedronka item is " + rozlb.ToString("0.00") + "zł cheaper";
+
+
+
+
+
+
+
+                    }
+
+                    //lidl iedronka win
+                    if (produktL.cena_produktu == produktB.cena_produktu && produktL.cena_produktu < produktT.cena_produktu)
+                    {
+                        thebest = produktL.cena_produktu;
+                        rozlt = produktT.cena_produktu - thebest;
+
+                        KomunikatBonusaNaKoniec = "Prices from lidl and biedronka are the best:" + thebest + "zł, comapred to price from netto item is " + rozlt.ToString("0.00") + "zł cheaper";
+
+
+
+
+
+
+
+                    }
+
+
+                    //netto biedronka win
+                    if (produktT.cena_produktu == produktB.cena_produktu && produktT.cena_produktu < produktL.cena_produktu)
+                    {
+                        thebest = produktT.cena_produktu;
+                        roztl = produktL.cena_produktu - thebest;
+
+                        KomunikatBonusaNaKoniec = "Prices from netto and biedronka are the best:" + thebest + "zł, comapred to price from lidl item is " + roztl.ToString("0.00") + "zł cheaper";
+
+
+
+
+
+
+
+                    }
+                    Miasto = null;
+                    nazwa = null;
+                    Producent = null;
+                }
+            }
+
+            catch (NullReferenceException)
+            {
+
+            }
+        }
+        else
+        {
+            Miasto = null;
+            nazwa = null;
+            Producent = null;
+
+            snackbar.Add("Incorrect values!!", Severity.Error);
+        }
+
+    }
+}
+
+
+
+
+
+
